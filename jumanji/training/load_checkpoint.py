@@ -70,7 +70,7 @@ REPO_ID = f"InstaDeepAI/jumanji-benchmark-a2c-{cfg.env.registered_version}"
 FILENAME = f"{cfg.env.registered_version}_training_state"
 
 # model_checkpoint = hf_hub_download(repo_id=REPO_ID, filename=FILENAME)
-# model_checkpoint = "/media/timityjoe/Data/workspace/marl/instadeep/jumanji/training_state"
+# model_checkpoint = "{$JUMANJI}/training_state"
 model_checkpoint = "training_state"
 print(f"model_checkpoint:{model_checkpoint}")
 
