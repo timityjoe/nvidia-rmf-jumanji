@@ -25,3 +25,10 @@ a2c:
     l_td: 1.0
     l_en: 0.01
     learning_rate: 1e-4
+    
+logger:
+    type: tensorboard
+    save_checkpoint: true
+    name: ${agent}_${env.name}
+  
+  

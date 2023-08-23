@@ -62,14 +62,17 @@ from jumanji.wrappers import VmapAutoResetWrapper
 
 def setup_logger(cfg: DictConfig) -> Logger:
     logger: Logger
+    print(f"setup_logger():{cfg}")
     # Log only once if there are multiple hosts on the pod.
     if jax.process_index() != 0:
         return NoOpLogger()
     if cfg.logger.type == "tensorboard":
+        print(" - tensorboard")
         logger = TensorboardLogger(
             name=cfg.logger.name, save_checkpoint=cfg.logger.save_checkpoint
         )
     elif cfg.logger.type == "neptune":
+        print(" - neptune")
         logger = NeptuneLogger(
             name=cfg.logger.name,
             project="InstaDeep/jumanji",
@@ -77,6 +80,7 @@ def setup_logger(cfg: DictConfig) -> Logger:
             save_checkpoint=cfg.logger.save_checkpoint,
         )
     elif cfg.logger.type == "terminal":
+        print(" - terminal")
         logger = TerminalLogger(
             name=cfg.logger.name, save_checkpoint=cfg.logger.save_checkpoint
         )
