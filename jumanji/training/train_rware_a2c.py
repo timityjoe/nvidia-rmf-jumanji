@@ -67,9 +67,13 @@ def download_file(url: str, file_path: str) -> None:
 env = "robot_warehouse"
 # env = "maze"
 # env = "cleaner"
+# env = "snake"
 
-agent = "random"  # @param ['random', 'a2c']
-# agent = "a2c"
+# agent = "random"  # @param ['random', 'a2c']
+agent = "a2c"
+
+config_url = "configs/env/{env}.yaml"
+env_url = "configs/env/{env}.yaml"
 
 
 # @hydra.main(config_path="configs", config_name="config.yaml")
@@ -133,7 +137,7 @@ def train(cfg: omegaconf.DictConfig, log_compiles: bool = False) -> None:
                 env_steps=env_steps,
             )
             if not isinstance(agent, RandomAgent):
-                print("agent is not instance of RandomAgent")
+                print("A2C_Agent:")
                 # Greedy evaluation
                 with eval_timer:
                     metrics = greedy_eval.run_evaluation(
@@ -145,6 +149,7 @@ def train(cfg: omegaconf.DictConfig, log_compiles: bool = False) -> None:
                     label="eval_greedy",
                     env_steps=env_steps,
                 )
+                print("End Stochastic evaluation - logger.write()")
 
             # Training
             with train_timer:
@@ -155,6 +160,7 @@ def train(cfg: omegaconf.DictConfig, log_compiles: bool = False) -> None:
                 label="train",
                 env_steps=env_steps,
             )
+            print("End Training - logger.write()")
 
 
 if __name__ == "__main__":
@@ -173,15 +179,15 @@ if __name__ == "__main__":
             print("Only CPU accelerator is connected.")
 
 
-    os.makedirs("configs", exist_ok=True)
-    config_url = "https://raw.githubusercontent.com/instadeepai/jumanji/main/jumanji/training/configs/config.yaml"
-    download_file(config_url, "configs/config.yaml")
-    env_url = f"https://raw.githubusercontent.com/instadeepai/jumanji/main/jumanji/training/configs/env/{env}.yaml"
-    os.makedirs("configs/env", exist_ok=True)
-    download_file(env_url, f"configs/env/{env}.yaml")
-
+    # os.makedirs("configs", exist_ok=True)
+    # config_url = "https://raw.githubusercontent.com/instadeepai/jumanji/main/jumanji/training/configs/config.yaml"
+    # download_file(config_url, "configs/config.yaml")
+    # env_url = f"https://raw.githubusercontent.com/instadeepai/jumanji/main/jumanji/training/configs/env/{env}.yaml"
+    # os.makedirs("configs/env", exist_ok=True)
+    # download_file(env_url, f"configs/env/{env}.yaml")
 
     with initialize(version_base=None, config_path="configs"):
-        cfg = compose(config_name="config.yaml", overrides=[f"env={env}", f"agent={agent}", "logger.type=terminal", "logger.save_checkpoint=true"])
+        # cfg = compose(config_name="config.yaml", overrides=[f"env={env}", f"agent={agent}", "logger.type=terminal", "logger.save_checkpoint=true"])
+        cfg = compose(config_name="config.yaml", overrides=[f"env={env}", f"agent={agent}", "logger.type=tensorboard", "logger.save_checkpoint=true"])
 
     train(cfg)

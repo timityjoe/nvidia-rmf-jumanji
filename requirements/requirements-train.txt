@@ -1,4 +1,4 @@
-dm-haiku==0.0.9
+dm-haiku==0.0.10
 huggingface-hub
 hydra-core==1.3
 neptune-client==0.16.15

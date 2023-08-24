@@ -104,6 +104,7 @@ def setup_env(cfg: DictConfig) -> Environment:
 def setup_agent(cfg: DictConfig, env: Environment) -> Agent:
     agent: Agent
     if cfg.agent == "random":
+        print(" - random")
         random_policy = _setup_random_policy(cfg, env)
         agent = RandomAgent(
             env=env,
@@ -112,6 +113,7 @@ def setup_agent(cfg: DictConfig, env: Environment) -> Agent:
             random_policy=random_policy,
         )
     elif cfg.agent == "a2c":
+        print(" - a2c")
         actor_critic_networks = _setup_actor_critic_neworks(cfg, env)
         optimizer = optax.adam(cfg.env.a2c.learning_rate)
         agent = A2CAgent(

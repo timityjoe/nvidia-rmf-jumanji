@@ -27,3 +27,10 @@ python3 -m jumanji.training.train
 python3 -m jumanji.training.train_rware
 python3 -m jumanji.training.train_rware_a2c
 python3 -m jumanji.training.load_checkpoint
+
+
+
+# Start Tensorboard
+tensorboard --logdir=./ --port=8080
+
+
