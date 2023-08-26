@@ -3,6 +3,7 @@
 import subprocess
 import os
 from tqdm import tqdm
+import numpy as np
 
 # Based on https://stackoverflow.com/questions/67504079/how-to-check-if-an-nvidia-gpu-is-available-on-my-system
 try:
@@ -82,7 +83,7 @@ print("PWD:", path)
 
 with open(model_checkpoint, "rb") as f:
     training_state = pickle.load(f)
-print(f"training_state:{training_state}")
+# print(f"training_state:{training_state}")
 # print(f"training_state.params_state:{training_state.params_state}")
 # print(f"training_state.params_state.params:{training_state.params_state.params}")
 
@@ -97,7 +98,7 @@ if agent == "a2c":
     policy = lambda *args: policy(*args)[0]
 
 
-NUM_EPISODES = 10
+NUM_EPISODES = 2
 
 reset_fn = jax.jit(env.reset)
 step_fn = jax.jit(env.step)
@@ -111,7 +112,17 @@ for episode in tqdm(range(NUM_EPISODES)):
         key, action_key = jax.random.split(key)
         observation = jax.tree_util.tree_map(lambda x: x[None], timestep.observation)
         action = policy(observation, action_key)
-        state, timestep = step_fn(state, action.squeeze(axis=0))
+
+        # Mod by Tim: Some impact on agent = "a2c" over "random"
+        # print("action type:", type(action), "len:", len(action))
+        # print("action:", action)
+        # print("action[0]:", action[0])
+        # print("action[1]:", action[1])
+        # state, timestep = step_fn(state, action.squeeze(axis=0))
+        action_mod = action[0]
+        state, timestep = step_fn(state, action_mod.squeeze(axis=0))
+
+
         env.render(state)
         states.append(state)
     # Freeze the terminal frame to pause the GIF.
