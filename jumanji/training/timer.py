@@ -19,7 +19,7 @@ import inspect
 import logging
 import time
 from contextlib import AbstractContextManager
-from typing import Any, Dict, Literal, Optional
+from typing_extensions import Any, Dict, Literal, Optional
 
 
 class Timer(AbstractContextManager):
