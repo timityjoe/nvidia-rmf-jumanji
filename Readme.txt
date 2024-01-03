@@ -31,6 +31,7 @@ python3 -m jumanji.training.load_checkpoint
 
 
 # Start Tensorboard
+cd ./a2c_robot_warehouse
 tensorboard --logdir=./ --port=8080
 
 
