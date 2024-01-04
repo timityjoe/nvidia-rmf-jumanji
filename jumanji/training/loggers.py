@@ -93,7 +93,7 @@ class Logger(AbstractContextManager):
         with open(self.checkpoint_file_name, "wb") as file_:
 
             # Mod by Tim: This is where the trained model gets saved
-            logging.info("Pickling and dump training_state model...")
+            logging.info("Pickling and dump [training_state] model...")
             pickle.dump(training_state, file_)
 
         self.upload_checkpoint()

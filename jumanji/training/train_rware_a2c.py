@@ -105,7 +105,7 @@ def train(cfg: omegaconf.DictConfig, log_compiles: bool = False) -> None:
 
     @functools.partial(jax.pmap, axis_name="devices")
     def epoch_fn(training_state: TrainingState) -> Tuple[TrainingState, Dict]:
-        print("epoch_fn()")
+        print("epoch_fn(), reading in [training_state] object...")
         training_state, metrics = jax.lax.scan(
             lambda training_state, _: agent.run_epoch(training_state),
             training_state,
@@ -153,6 +153,7 @@ def train(cfg: omegaconf.DictConfig, log_compiles: bool = False) -> None:
 
             # Training
             with train_timer:
+                print(f"train_timer:{train_timer}")
                 training_state, metrics = epoch_fn(training_state)
                 jax.block_until_ready((training_state, metrics))
             logger.write(
