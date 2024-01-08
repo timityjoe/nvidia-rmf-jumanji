@@ -204,7 +204,8 @@ class RobotWarehouse(Environment[State]):
 
         self.possible_agents = self.agent_ids_str
         self.agents = self.agent_ids_str
-        self._num_actions = 5
+        self._num_actions = self.action_spec().num_values
+        logger.info(f"self._num_actions:{self._num_actions}")
 
         # See /og_marl/replay_buffers.py L31
         #   This file, L385
@@ -213,14 +214,14 @@ class RobotWarehouse(Environment[State]):
         # self._obs_dim = self.num_obs_features
         # self.action_spaces = {agent: Discrete(self._num_actions) for agent in self.possible_agents}
         # self.observation_spaces = {agent: Box(-np.inf, np.inf, (self._obs_dim,)) for agent in self.possible_agents}
-        # self.info_spec = {
-        #     "state": np.zeros((self._environment.get_state_size(),), "float32"),
-        #     "legals": {agent: np.zeros((self._num_actions,), "int64") for agent in self.possible_agents}
-        # }    
+        self.info_spec = {
+            "state": np.zeros((self._environment.get_state_size(),), "float32"),
+            "legals": {agent: np.zeros((self._num_actions,), "int64") for agent in self.possible_agents}
+        }    
 
         # self.action_spaces = {agent: None for agent in self.possible_agents}
         # self.observation_spaces = {agent: None for agent in self.possible_agents}
-        self.info_spec = {} 
+        # self.info_spec = {} 
         #---------------------------------------------
 
 
@@ -252,7 +253,12 @@ class RobotWarehouse(Environment[State]):
             timestep: TimeStep object corresponding the first timestep returned by the environment.
         """
         # create environment state
-        state = self._generator(key)
+        logger.info(f"key:{key} key.ndim:{key.ndim}")
+        
+        # Mod by Tim: TODO Somehow the keygen is not passing in correctly
+        # state = self._generator(key)
+        random_key = jax.random.PRNGKey(0)
+        state = self._generator(random_key)
 
         # collect first observations and create timestep
         agents_view = self._make_observations(state.grid, state.agents, state.shelves)
@@ -263,8 +269,8 @@ class RobotWarehouse(Environment[State]):
         )
 
         # logger.info(f"observation.shape:{observation.shape}")
-        # logger.info(f"observation type:{type(observation)}")
-        # logger.info(f"observation:{observation}")
+        logger.info(f"observation type:{type(observation)}")
+        logger.info(f"observation:{observation}")
 
         timestep = restart(observation=observation)
         return state, timestep
