@@ -48,6 +48,19 @@ from jumanji.types import TimeStep, restart, termination, transition
 from jumanji.viewer import Viewer
 
 
+from loguru import logger
+# logger.remove()
+# logger.add(sys.stdout, level="INFO")
+# logger.add(sys.stdout, level="SUCCESS")
+# logger.add(sys.stdout, level="WARNING")
+
+#---------------------------------------------
+# Mod by Tim: for og_marl
+from gymnasium.spaces import Discrete, Box
+import numpy as np
+#---------------------------------------------
+
+
 class RobotWarehouse(Environment[State]):
     """A JAX implementation of the 'Robotic warehouse' environment:
     https://github.com/semitable/robotic-warehouse
@@ -176,10 +189,42 @@ class RobotWarehouse(Environment[State]):
         self.not_in_queue_size = self._generator.not_in_queue_size
 
         self.agent_ids = jnp.arange(self.num_agents)
+
         self.directions = jnp.array([d.value for d in Direction])
         self.num_obs_features = utils.calculate_num_observation_features(
             self.sensor_range
         )
+        logger.info(f"self.num_obs_features:{self.num_obs_features}")
+
+        #---------------------------------------------
+        # Mod by Tim: for og_marl
+        # self.agents = self.agent_ids
+        self.agent_ids_str = [str(x) for x in self.agent_ids]
+        logger.info(f"self.agent_ids:{self.agent_ids} self.agent_ids_str:{self.agent_ids_str}")
+
+        self.possible_agents = self.agent_ids_str
+        self.agents = self.agent_ids_str
+        self._num_actions = self.action_spec().num_values
+        logger.info(f"self._num_actions:{self._num_actions}")
+
+        # See /og_marl/replay_buffers.py L31
+        #   This file, L385
+        # 
+        # self._obs_dim = (self.num_agents, self.num_obs_features)    # Array (int32) of shape (num_agents, num_obs_features).
+        # self._obs_dim = self.num_obs_features
+        # self.action_spaces = {agent: Discrete(self._num_actions) for agent in self.possible_agents}
+        # self.observation_spaces = {agent: Box(-np.inf, np.inf, (self._obs_dim,)) for agent in self.possible_agents}
+        self.info_spec = {
+            "state": np.zeros((self._environment.get_state_size(),), "float32"),
+            "legals": {agent: np.zeros((self._num_actions,), "int64") for agent in self.possible_agents}
+        }    
+
+        # self.action_spaces = {agent: None for agent in self.possible_agents}
+        # self.observation_spaces = {agent: None for agent in self.possible_agents}
+        # self.info_spec = {} 
+        #---------------------------------------------
+
+
         self.goals = self._generator.goals
         self.time_limit = time_limit
 
@@ -208,7 +253,12 @@ class RobotWarehouse(Environment[State]):
             timestep: TimeStep object corresponding the first timestep returned by the environment.
         """
         # create environment state
-        state = self._generator(key)
+        logger.info(f"key:{key} key.ndim:{key.ndim}")
+        
+        # Mod by Tim: TODO Somehow the keygen is not passing in correctly
+        # state = self._generator(key)
+        random_key = jax.random.PRNGKey(0)
+        state = self._generator(random_key)
 
         # collect first observations and create timestep
         agents_view = self._make_observations(state.grid, state.agents, state.shelves)
@@ -217,6 +267,11 @@ class RobotWarehouse(Environment[State]):
             action_mask=state.action_mask,
             step_count=state.step_count,
         )
+
+        # logger.info(f"observation.shape:{observation.shape}")
+        logger.info(f"observation type:{type(observation)}")
+        logger.info(f"observation:{observation}")
+
         timestep = restart(observation=observation)
         return state, timestep
 
@@ -333,6 +388,13 @@ class RobotWarehouse(Environment[State]):
             key=key,
         )
         return next_state, timestep
+
+    # Mod by Tim: For og_marl
+    def extra_spec(self):
+        """Function returns extra spec."""
+        state_spec = {"s_t": jnp.zeros((4,), "float32")}
+
+        return state_spec
 
     def observation_spec(self) -> specs.Spec[Observation]:
         """Specification of the observation of the `RobotWarehouse` environment.
