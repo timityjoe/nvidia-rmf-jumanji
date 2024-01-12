@@ -64,10 +64,10 @@ from loguru import logger as loguru_logger
 # See       /og_marl/tf2/systems/base.py
 # Also      /og_marl/examples/tf2/online/qmix_pursuit.py
 
-from og_marl_tjt_old.og_marl.loggers import JsonWriter
-from og_marl_tjt_old.og_marl.tf2.systems.qmix import QMIXSystem
+from og_marl_tjt.og_marl.loggers import JsonWriter
+from og_marl_tjt.og_marl.tf2.systems.qmix import QMIXSystem
 # from og_marl_tjt_old.og_marl.environments.pursuit import Pursuit
-from og_marl_tjt_old.og_marl.replay_buffers import SequenceCPPRB
+from og_marl_tjt.og_marl.replay_buffers import SequenceCPPRB
 from absl import flags, app
 
 FLAGS = flags.FLAGS

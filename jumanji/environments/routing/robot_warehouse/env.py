@@ -207,7 +207,7 @@ class RobotWarehouse(Environment[State]):
         self._num_actions = self.action_spec().num_values
         logger.info(f"self._num_actions:{self._num_actions}")
 
-        # See /og_marl/replay_buffers.py L31
+        # TODO: See /og_marl/replay_buffers.py L31
         #   This file, L385
         # 
         # self._obs_dim = (self.num_agents, self.num_obs_features)    # Array (int32) of shape (num_agents, num_obs_features).
