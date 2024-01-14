@@ -58,6 +58,9 @@ from loguru import logger
 # Mod by Tim: for og_marl
 from gymnasium.spaces import Discrete, Box
 import numpy as np
+# Conversion from jax to numpy, and vice versa
+import numpy as np
+import jax.numpy as jnp
 #---------------------------------------------
 
 
@@ -196,7 +199,8 @@ class RobotWarehouse(Environment[State]):
         )
         logger.info(f"self.num_obs_features:{self.num_obs_features}")
 
-        #---------------------------------------------
+        #------------------------------------------------------------------------------------------
+        #------------------------------------------------------------------------------------------
         # Mod by Tim: for og_marl
         # self.agents = self.agent_ids
         self.agent_ids_str = [str(x) for x in self.agent_ids]
@@ -204,25 +208,31 @@ class RobotWarehouse(Environment[State]):
 
         self.possible_agents = self.agent_ids_str
         self.agents = self.agent_ids_str
-        self._num_actions = self.action_spec().num_values
-        logger.info(f"self._num_actions:{self._num_actions}")
+        self._num_actions = np.array(self.action_spec().num_values)
+        logger.info(f"self._num_actions:{self._num_actions}, type{type(self._num_actions)}")
 
-        # TODO: See /og_marl/replay_buffers.py L31
+        # TODO: See /og_marl/environments/smac1.py
         #   This file, L385
-        # 
-        # self._obs_dim = (self.num_agents, self.num_obs_features)    # Array (int32) of shape (num_agents, num_obs_features).
-        # self._obs_dim = self.num_obs_features
-        # self.action_spaces = {agent: Discrete(self._num_actions) for agent in self.possible_agents}
-        # self.observation_spaces = {agent: Box(-np.inf, np.inf, (self._obs_dim,)) for agent in self.possible_agents}
-        self.info_spec = {
-            "state": np.zeros((self._environment.get_state_size(),), "float32"),
-            "legals": {agent: np.zeros((self._num_actions,), "int64") for agent in self.possible_agents}
-        }    
+        self._obs_dim = self.get_agent_obs_size()
+        logger.info(f"self._obs_dim:{self._obs_dim}, type{type(self._obs_dim)}")
 
-        # self.action_spaces = {agent: None for agent in self.possible_agents}
-        # self.observation_spaces = {agent: None for agent in self.possible_agents}
-        # self.info_spec = {} 
-        #---------------------------------------------
+        self.action_spaces = {agent: Discrete(self.get_agent_obs_size()) for agent in self.possible_agents}
+        logger.info(f"self.action_spaces:{self.action_spaces}, type{type(self.action_spaces)}")
+
+        self.observation_spaces = {agent: Box(-np.inf, np.inf, (self._obs_dim,)) for agent in self.possible_agents}
+
+        self.info_spec = {
+            "state": np.zeros((self.get_state_size(),), "float32"),
+            "legals": {agent: np.zeros((self.get_agent_obs_size(),), "int64") for agent in self.possible_agents}
+        }
+
+        self._observation = Observation(
+            agents_view=None,
+            action_mask=None,
+            step_count=None,
+        )
+        #------------------------------------------------------------------------------------------
+        #------------------------------------------------------------------------------------------
 
 
         self.goals = self._generator.goals
@@ -233,6 +243,42 @@ class RobotWarehouse(Environment[State]):
             self.grid_size, self.goals, "RobotWarehouse"
         )
 
+
+    #------------------------------------------------------------------------------------------
+    #------------------------------------------------------------------------------------------
+    # Mod by Tim: Adapted from starcraft2.py L1309, for og_marl
+    def get_agent_obs_size(self):
+        """Returns the size of the agent observation."""
+        size_ag_obs = len(Action)
+        # logger.info(f"size_ag_obs:{size_ag_obs}")
+        return size_ag_obs
+
+    def get_state_size(self):
+        """Returns the size of the global state."""
+        size_glob_obs = self.get_agent_obs_size() * self.num_agents
+        # logger.info(f"size_glob_obs:{size_glob_obs}")
+        return size_glob_obs      
+
+    def get_state(self):
+        """Returns the global state.
+        NOTE: This functon should not be used during decentralised execution.
+        """
+        glob_state = self._observation
+        # logger.info(f"glob_state:{glob_state}")
+        return glob_state
+
+    # Mod by Tim: Adapted from smacv1.py
+    def get_obs(self):
+        return self._observation  
+    
+    def _get_legal_actions(self):
+        # return self.action_spaces
+        legal_actions = self._observation.action_mask
+        logger.info(f"self._observation.action_mask:{legal_actions}")
+        return legal_actions
+    #------------------------------------------------------------------------------------------
+    #------------------------------------------------------------------------------------------
+
     def __repr__(self) -> str:
         return (
             f"RobotWarehouse(\n"
@@ -242,6 +288,7 @@ class RobotWarehouse(Environment[State]):
             ")"
         )
 
+    # Mod by Tim: This is original reset(key) function, TODO See smacv1.py L52
     def reset(self, key: chex.PRNGKey) -> Tuple[State, TimeStep[Observation]]:
         """Resets the environment.
 
@@ -255,10 +302,14 @@ class RobotWarehouse(Environment[State]):
         # create environment state
         logger.info(f"key:{key} key.ndim:{key.ndim}")
         
-        # Mod by Tim: TODO Somehow the keygen is not passing in correctly
+        #------------------------------------------------------------------------------------------
+        # Mod by Tim: TODO Somehow the keygen 
+        # from /nvidia-rmf-jumanji2/og_marl_tjt/og_marl/tf2/systems/base.py
+        # is not passing in correctly....
         # state = self._generator(key)
         random_key = jax.random.PRNGKey(0)
         state = self._generator(random_key)
+        #------------------------------------------------------------------------------------------
 
         # collect first observations and create timestep
         agents_view = self._make_observations(state.grid, state.agents, state.shelves)
@@ -268,12 +319,60 @@ class RobotWarehouse(Environment[State]):
             step_count=state.step_count,
         )
 
-        # logger.info(f"observation.shape:{observation.shape}")
-        logger.info(f"observation type:{type(observation)}")
-        logger.info(f"observation:{observation}")
+        #------------------------------------------------------------------------------------------
+        # Mod by Tim:
+        self._observations = observation
+        legal_actions = self._get_legal_actions()
 
+        logger.info(f"legal_actions:{legal_actions}")
+
+        legals = {agent: legal_actions[str(i)] for i, agent in enumerate(self.possible_agents)}
+        env_state = self.get_state()
+        info = {
+            "legals": legals,
+            "state": env_state
+        }
+        self._info = info
+        # logger.info(f"observation.shape:{observation.shape}")
+        # logger.info(f"type(observation) :{type(observation)}")
+        # logger.info(f"observation:{observation}")
+        #------------------------------------------------------------------------------------------
+
+        # TODO see /jumanji/types.py
         timestep = restart(observation=observation)
         return state, timestep
+
+
+    # Mod by Tim: smacv1.py L50
+    # def reset(self):
+    #     """Resets the env."""
+
+    #     # Reset the environment
+    #     # self._environment.reset()
+    #     self._done = False
+
+    #     # Get observation from env
+    #     # observations = self.get_obs()
+    #     # observations = {agent: observations[i] for i, agent in enumerate(self.possible_agents)}
+    #     observations = self.agents_view
+    #     legal_actions = self._get_legal_actions()
+
+    #     logger.info(f"legal_actions:{legal_actions}, type:{type(legal_actions)}")
+
+    #     # legals = {agent: legal_actions[i] for i, agent in enumerate(self.possible_agents)}
+    #     legals = {agent: legal_actions[str(i)] for i, agent in enumerate(self.possible_agents)}
+        
+    #     logger.info(f"self.get_state():{self.get_state()}, type:{type(self.get_state())}")
+    #     # env_state = self.get_state().astype("float32")
+    #     env_state = self.get_state()
+
+    #     info = {
+    #         "legals": legals,
+    #         "state": env_state
+    #     }
+
+    #     return observations, info    
+
 
     def step(
         self,
@@ -304,7 +403,9 @@ class RobotWarehouse(Environment[State]):
         request_queue = state.request_queue
 
         # check for invalid action -> turn into noops
-        actions = utils.get_valid_actions(action, state.action_mask)
+        self.actions = utils.get_valid_actions(action, state.action_mask)
+
+        logger.info(f"self.actions:{self.actions}")
 
         # update agents, shelves and grid
         def update_state_scan(
@@ -317,7 +418,7 @@ class RobotWarehouse(Environment[State]):
             return (grid, agents, shelves, agent_id + 1), None
 
         (grid, agents, shelves, _), _ = jax.lax.scan(
-            update_state_scan, (grid, agents, shelves, 0), actions
+            update_state_scan, (grid, agents, shelves, 0), self.actions
         )
 
         # check for agent collisions
@@ -364,7 +465,12 @@ class RobotWarehouse(Environment[State]):
 
         # compute next observation
         agents_view = self._make_observations(grid, agents, shelves)
+        logger.info(f"agents_view:{agents_view}")
+
         action_mask = utils.compute_action_mask(grid, agents)
+
+        logger.info(f"action_mask:{action_mask}")
+
         next_observation = Observation(
             agents_view=agents_view,
             action_mask=action_mask,
@@ -389,12 +495,14 @@ class RobotWarehouse(Environment[State]):
         )
         return next_state, timestep
 
+    # ---------------------------------------------------
     # Mod by Tim: For og_marl
     def extra_spec(self):
         """Function returns extra spec."""
         state_spec = {"s_t": jnp.zeros((4,), "float32")}
 
         return state_spec
+    # ---------------------------------------------------
 
     def observation_spec(self) -> specs.Spec[Observation]:
         """Specification of the observation of the `RobotWarehouse` environment.
