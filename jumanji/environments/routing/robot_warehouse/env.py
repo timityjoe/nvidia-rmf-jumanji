@@ -263,18 +263,18 @@ class RobotWarehouse(Environment[State]):
         """Returns the global state.
         NOTE: This functon should not be used during decentralised execution.
         """
-        glob_state = self._observation
-        # logger.info(f"glob_state:{glob_state}")
+        glob_state = self._observations
+        logger.info(f"self._observation:{self._observations}")
         return glob_state
 
     # Mod by Tim: Adapted from smacv1.py
     def get_obs(self):
-        return self._observation  
+        return self._observations  
     
     def _get_legal_actions(self):
         # return self.action_spaces
-        legal_actions = self._observation.action_mask
-        logger.info(f"self._observation.action_mask:{legal_actions}")
+        legal_actions = self._observations.action_mask
+        logger.info(f"self._observations.action_mask:{legal_actions}")
         return legal_actions
     #------------------------------------------------------------------------------------------
     #------------------------------------------------------------------------------------------
@@ -322,11 +322,16 @@ class RobotWarehouse(Environment[State]):
         #------------------------------------------------------------------------------------------
         # Mod by Tim:
         self._observations = observation
+        # logger.info(f"self._observations:{self._observations}")
+        # logger.info(f"self._observations.action_mask:{self._observations.action_mask}")
+
         legal_actions = self._get_legal_actions()
+        logger.info(f"legal_actions:{legal_actions}  type:{type(legal_actions)}")
 
-        logger.info(f"legal_actions:{legal_actions}")
+        # legals = {agent: legal_actions[str(i)] for i, agent in enumerate(self.possible_agents)}
+        legals = {agent: legal_actions[i] for i, agent in enumerate(self.possible_agents)}
+        # logger.info(f"legals:{legals}  type:{type(legals)}")
 
-        legals = {agent: legal_actions[str(i)] for i, agent in enumerate(self.possible_agents)}
         env_state = self.get_state()
         info = {
             "legals": legals,
