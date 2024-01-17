@@ -65,8 +65,14 @@ from loguru import logger as loguru_logger
 # Also      /og_marl/examples/tf2/online/qmix_pursuit.py
 
 from og_marl_tjt.og_marl.loggers import JsonWriter
-from og_marl_tjt.og_marl.tf2.systems.qmix import QMIXSystem
-# from og_marl_tjt_old.og_marl.environments.pursuit import Pursuit
+
+# TF2 based systems
+# from og_marl_tjt.og_marl.tf2.systems.qmix import QMIXSystem
+
+# Switch to JAX - See https://github.com/instadeepai/og-marl
+from og_marl_tjt.og_marl.environments.rware import Warehouse, RewardType
+from og_marl_tjt.og_marl.jax.systems.maicq2 import train_maicq_system
+
 from og_marl_tjt.og_marl.replay_buffers import SequenceCPPRB
 from absl import flags, app
 
@@ -119,16 +125,40 @@ def train(cfg: omegaconf.DictConfig, log_compiles: bool = False) -> None:
     env = setup_env(cfg)
 
     #---------------------------------------------------------------------------------
+    # Tensorflow2 based system
     # Convert the environment for datalogging; for offline pre-training purposes
     # See https://arxiv.org/pdf/2302.00521.pdf
     # Also      /og_marl/examples/tf2/online/qmix_pursuit.py
-    loguru_logger.info("1) Setup OG-MARL Offline Data Logger")
+    # loguru_logger.info("1) Setup OG-MARL Offline Data Logger")
 
-    json_writer = JsonWriter('logs/rware', 'tf2system', 'Good', 'rware', '')
-    system = QMIXSystem(env, json_writer, add_agent_id_to_obs=True)
-    replay_buffer = SequenceCPPRB(env, batch_size=64)
-    system.train_online(replay_buffer)
+    # json_writer = JsonWriter('logs/rware', 'tf2system', 'Good', 'rware', '')
+    # system = QMIXSystem(env, json_writer, add_agent_id_to_obs=True)
+    # replay_buffer = SequenceCPPRB(env, batch_size=64)
+    # system.train_online(replay_buffer)
     #---------------------------------------------------------------------------------
+
+
+    #---------------------------------------------------------------------------------
+    dataset_path = "datasets/rware/Good"
+
+    # Instantiate environment for evaluation
+    env = Warehouse(9, 8, 3, 10, 3, 1, 5, None, None, RewardType.GLOBAL)
+
+    # Setup a logger to write to terminal
+    logger = TerminalLogger()
+
+    # Train system
+    train_maicq_system(env, logger, dataset_path)
+    #---------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
 
     # agent = setup_agent(cfg, env)
     # stochastic_eval, greedy_eval = setup_evaluators(cfg, agent)

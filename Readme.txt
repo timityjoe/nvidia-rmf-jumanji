@@ -28,6 +28,8 @@ pip install id-mava[reverb,tf]==0.1.3
 pip install dm-acme
 pip install dm-reverb
 pip install cpprb
+pip install flax
+pip install flashbax
 
 
 Relevant directories:
@@ -46,6 +48,7 @@ python3 -m jumanji.training.load_checkpoint
 # Offline data generation & training (from og_marl_old)
 python3 -m jumanji.training.1_rware_a2c_gen_dataset 
 python3 -m jumanji.training.1_rware_a2c_gen_dataset --algo_name=qmix --dataset_quality=Good --env_name=rware
+python3 -m jumanji.training.1_rware_a2c_gen_dataset --algo_name=maicq --dataset_quality=Good --env_name=rware
 
 python3 -m jumanji.training.2_rware_a2c_pretrain_offline_network
 python3 -m jumanji.training.3_rware_a2c_online_finetune
