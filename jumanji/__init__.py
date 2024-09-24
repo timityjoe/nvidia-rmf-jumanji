@@ -73,7 +73,6 @@ register(
     kwargs={"generator": very_easy_sudoku_generator},
 )
 
-
 ###
 # Packing Environments
 ###
@@ -81,6 +80,10 @@ register(
 # 3D bin-packing problem with 20 randomly generated items maximum, 40 EMSs maximum that are
 # given in the observation.
 register(id="BinPack-v2", entry_point="jumanji.environments:BinPack")
+
+# 2D grid filling problem with 25 blocks, an 11x11 grid and a random grid generator.
+# The grid must be filled in `num_blocks` steps.
+register(id="FlatPack-v0", entry_point="jumanji.environments:FlatPack")
 
 # Job-shop scheduling problem with 20 jobs, 10 machines, at most
 # 8 operations per job, and a max operation duration of 6 timesteps.
@@ -92,7 +95,6 @@ register(id="Knapsack-v1", entry_point="jumanji.environments:Knapsack")
 
 # Tetris - the game of tetris with a grid size of 10x10 and a time limit of 400.
 register(id="Tetris-v0", entry_point="jumanji.environments:Tetris")
-
 
 ###
 # Routing Environments
@@ -127,3 +129,14 @@ register(id="Snake-v1", entry_point="jumanji.environments:Snake")
 
 # TSP with 20 randomly generated cities and a dense reward function.
 register(id="TSP-v1", entry_point="jumanji.environments:TSP")
+
+# Sokoban with deepmind dataset generator
+register(id="Sokoban-v0", entry_point="jumanji.environments:Sokoban")
+
+# Pacman - minimal version of Atari Pacman game
+register(id="PacMan-v1", entry_point="jumanji.environments:PacMan")
+
+# SlidingTilePuzzle - A sliding tile puzzle environment with the default grid size of 5x5.
+register(
+    id="SlidingTilePuzzle-v0", entry_point="jumanji.environments:SlidingTilePuzzle"
+)

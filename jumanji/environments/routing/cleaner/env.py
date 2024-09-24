@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from functools import cached_property
 from typing import Any, Dict, Optional, Sequence, Tuple
 
 import chex
@@ -30,12 +31,12 @@ from jumanji.types import TimeStep, restart, termination, transition
 from jumanji.viewer import Viewer
 
 
-class Cleaner(Environment[State]):
+class Cleaner(Environment[State, specs.MultiDiscreteArray, Observation]):
     """A JAX implementation of the 'Cleaner' game where multiple agents have to clean all tiles of
     a maze.
 
     - observation: `Observation`
-        - grid: jax array (int32) of shape (num_rows, num_cols)
+        - grid: jax array (int8) of shape (num_rows, num_cols)
             contains the state of the board: 0 for dirty tile, 1 for clean tile, 2 for wall.
         - agents_locations: jax array (int32) of shape (num_agents, 2)
             contains the location of each agent on the board.
@@ -57,7 +58,7 @@ class Cleaner(Environment[State]):
         - An invalid action is selected for any of the agents.
 
     - state: `State`
-        - grid: jax array (int32) of shape (num_rows, num_cols)
+        - grid: jax array (int8) of shape (num_rows, num_cols)
             contains the current state of the board: 0 for dirty tile, 1 for clean tile, 2 for wall.
         - agents_locations: jax array (int32) of shape (num_agents, 2)
             contains the location of each agent on the board.
@@ -71,10 +72,10 @@ class Cleaner(Environment[State]):
     ```python
     from jumanji.environments import Cleaner
     env = Cleaner()
-    key = jax.random.key(0)
+    key = jax.random.PRNGKey(0)
     state, timestep = jax.jit(env.reset)(key)
     env.render(state)
-    action = env.action_spec().generate_value()
+    action = env.action_spec.generate_value()
     state, timestep = jax.jit(env.step)(state, action)
     env.render(state)
     ```
@@ -107,6 +108,7 @@ class Cleaner(Environment[State]):
         self.num_cols = self.generator.num_cols
         self.grid_shape = (self.num_rows, self.num_cols)
         self.time_limit = time_limit or (self.num_rows * self.num_cols)
+        super().__init__()
         self.penalty_per_timestep = penalty_per_timestep
 
         # Create viewer used for rendering
@@ -122,12 +124,13 @@ class Cleaner(Environment[State]):
             ")"
         )
 
+    @cached_property
     def observation_spec(self) -> specs.Spec[Observation]:
         """Specification of the observation of the `Cleaner` environment.
 
         Returns:
             Spec for the `Observation`, consisting of the fields:
-                - grid: BoundedArray (int32) of shape (num_rows, num_cols). Values
+                - grid: BoundedArray (int8) of shape (num_rows, num_cols). Values
                     are between 0 and 2 (inclusive).
                 - agent_locations_spec: BoundedArray (int32) of shape (num_agents, 2).
                     Maximum value for the first column is num_rows, and maximum value
@@ -135,7 +138,7 @@ class Cleaner(Environment[State]):
                 - action_mask: BoundedArray (bool) of shape (num_agent, 4).
                 - step_count: BoundedArray (int32) of shape ().
         """
-        grid = specs.BoundedArray(self.grid_shape, jnp.int32, 0, 2, "grid")
+        grid = specs.BoundedArray(self.grid_shape, jnp.int8, 0, 2, "grid")
         agents_locations = specs.BoundedArray(
             (self.num_agents, 2), jnp.int32, [0, 0], self.grid_shape, "agents_locations"
         )
@@ -152,6 +155,7 @@ class Cleaner(Environment[State]):
             step_count=step_count,
         )
 
+    @cached_property
     def action_spec(self) -> specs.MultiDiscreteArray:
         """Specification of the action for the `Cleaner` environment.
 

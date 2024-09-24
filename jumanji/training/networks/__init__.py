@@ -30,6 +30,10 @@ from jumanji.training.networks.connector.actor_critic import (
 from jumanji.training.networks.connector.random import make_random_policy_connector
 from jumanji.training.networks.cvrp.actor_critic import make_actor_critic_networks_cvrp
 from jumanji.training.networks.cvrp.random import make_random_policy_cvrp
+from jumanji.training.networks.flat_pack.actor_critic import (
+    make_actor_critic_networks_flat_pack,
+)
+from jumanji.training.networks.flat_pack.random import make_random_policy_flat_pack
 from jumanji.training.networks.game_2048.actor_critic import (
     make_actor_critic_networks_game_2048,
 )
@@ -60,6 +64,10 @@ from jumanji.training.networks.multi_cvrp.actor_critic import (
     make_actor_critic_networks_multicvrp,
 )
 from jumanji.training.networks.multi_cvrp.random import make_random_policy_multicvrp
+from jumanji.training.networks.pac_man.actor_critic import (
+    make_actor_critic_networks_pacman,
+)
+from jumanji.training.networks.pac_man.random import make_random_policy_pacman
 from jumanji.training.networks.robot_warehouse.actor_critic import (
     make_actor_critic_networks_robot_warehouse,
 )
@@ -70,10 +78,20 @@ from jumanji.training.networks.rubiks_cube.actor_critic import (
     make_actor_critic_networks_rubiks_cube,
 )
 from jumanji.training.networks.rubiks_cube.random import make_random_policy_rubiks_cube
+from jumanji.training.networks.sliding_tile_puzzle.actor_critic import (
+    make_actor_critic_networks_sliding_tile_puzzle,
+)
+from jumanji.training.networks.sliding_tile_puzzle.random import (
+    make_random_policy_sliding_tile_puzzle,
+)
 from jumanji.training.networks.snake.actor_critic import (
     make_actor_critic_networks_snake,
 )
 from jumanji.training.networks.snake.random import make_random_policy_snake
+from jumanji.training.networks.sokoban.actor_critic import (
+    make_actor_critic_networks_sokoban,
+)
+from jumanji.training.networks.sokoban.random import make_random_policy_sokoban
 from jumanji.training.networks.sudoku.actor_critic import (
     make_cnn_actor_critic_networks_sudoku,
     make_equivariant_actor_critic_networks_sudoku,
