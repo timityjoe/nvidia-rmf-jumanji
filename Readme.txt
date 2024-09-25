@@ -5,9 +5,13 @@
 
 # Conda Setup
 conda init bash
-conda create --name conda39-jumanji python=3.9
-conda activate conda39-jumanji
+conda create --name conda310-jumanji python=3.10
+conda activate conda310-jumanji
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CONDA_PREFIX/lib/
+
+# Setup
+export PYTHONPATH="${PYTHONPATH}:/media/timityjoe/Data2/Cube/nvidia-rmf-jumanji/"
+source jumanup.sh
 
 ## Pull additional repos
 vcs import < og_marl_repo.txt
@@ -30,7 +34,7 @@ pip install dm-reverb
 pip install cpprb
 pip install flax
 pip install flashbax
-
+pip install .
 
 Relevant directories:
 {$JUMANJI}/jumanji/training
@@ -42,6 +46,10 @@ Relevant directories:
 python3 -m jumanji.training.train
 python3 -m jumanji.training.train_rware
 python3 -m jumanji.training.train_rware_a2c
+python3 -m jumanji.training.train_multicvrp
+python3  jumanji/training/train_multicvrp.py
+python3 -m jumanji.training.test
+python3  jumanji/training/test.py
 python3 -m jumanji.training.load_checkpoint
 
 
