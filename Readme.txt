@@ -71,4 +71,7 @@ python3 -m jumanji.training.3_rware_a2c_online_finetune
 cd ./a2c_robot_warehouse
 tensorboard --logdir=./ --port=8080
 
+cd ./a2c_multi_cvrp
+tensorboard --logdir=./ --port=8080
+python3 -m tensorboard.main --logdir=./ --port=8080
 
