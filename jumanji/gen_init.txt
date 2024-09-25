@@ -1,0 +1,3 @@
+
+# Run this in terminal:
+find $DIR -type d -exec touch {}/__init__.py \;

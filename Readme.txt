@@ -28,6 +28,11 @@ pip install -r requirements/requirements.txt
 pip install -r requirements/requirements-dev.txt
 pip install -r requirements/requirements-train.txt
 pip install -r requirements/requirements_og_marl.txt
+
+pip install jax==0.4.23 jaxlib==0.4.23
+pip install scipy==1.7.2
+pip install numpy==1.23
+
 pip install id-mava[reverb,tf]==0.1.3
 pip install dm-acme
 pip install dm-reverb
